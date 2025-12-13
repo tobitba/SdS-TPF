@@ -1,4 +1,144 @@
 package ar.edu.itba.sds.engine;
 
-public class Field {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import ar.edu.itba.sds.tools.HumanGenerator;
+import ar.edu.itba.sds.tools.Time;
+
+public class Field implements Iterable<Time> {
+
+    private final static int X = 0;
+    private final static int Y = 0;
+    private final static int A_H = 4;
+    private final static int B_H = 1;
+    private final static int A_Z = 8;
+    private final static int B_Z = 4;
+
+
+    private final List<Civilian> civilians = new ArrayList<>();
+    private final List<Zombie> zombies = new ArrayList<>();
+    private final List<Doctor> doctors = new ArrayList<>();
+    private double borderRadius;
+    private double maxTime;
+    private double currentTime = 0;
+
+    public Field(double borderRadius, int civilianCount, int zombieCount, int doctorCount, double maxTime) {
+        this.borderRadius = borderRadius;
+        HumanGenerator.generate(civilianCount, zombieCount, doctorCount, civilians::add, zombies::add, doctors::add, borderRadius);
+        this.maxTime = maxTime;
+    }
+
+
+    @Override
+    public Iterator<Time> iterator() {
+        return new Iterator<>() {
+            private final static double DT = 0.8;
+            @Override
+            public boolean hasNext() {
+                return currentTime < maxTime;
+            }
+
+            @Override
+            public Time next() {
+                double[][] nc = new double[civilians.size()][2];
+                double[][] nd = new double[doctors.size()][2];
+                double[][] nz = new double[zombies.size()][2];
+
+                for (int i = 0; i < civilians.size(); i++) {
+                    //TODO: agregar interaccion con paredes!!
+                    Civilian c1 = civilians.get(i);
+                    //Interaccion con otros civiles
+                    for (int j = i + 1; j < civilians.size(); j++) {
+                        Civilian c2 = civilians.get(j);
+
+                        double[] n = getInteraction(c1, c2, A_H, B_H);
+
+                        nc[i][X] += n[X];
+                        nc[i][Y] += n[Y];
+                        nc[j][X] -= n[X];
+                        nc[j][Y] -= n[Y];
+
+
+                    }
+                    //Interaccion con doctores (misma logica anterior, tengo que evitarlos)
+                    for(int j = 0; j < doctors.size(); j++){
+                        Doctor d = doctors.get(j);
+                        double[] n = getInteraction(c1, d, A_H, B_H);
+
+                        nc[i][X] += n[X];
+                        nc[i][Y] += n[Y];
+                        nd[j][X] -= n[X];
+                        nd[j][Y] -= n[Y];
+
+                    }
+                    //Interaccion con zombies
+                    for(Zombie z : zombies){
+                        double[] n = getInteraction(c1, z, A_Z, B_Z);
+                        nc[i][X] += n[X];
+                        nc[i][Y] += n[Y];
+                        if(z.getDistanceToTarget() > n[2]){
+                            z.setDistanceToTarget(n[2]);
+                            z.setTargetDirection(new double[]{n[3], n[4]}); //sisi ya se que esta feo.... despues vemos como lo mejoramos
+                        }
+
+                    }
+
+
+                }
+
+                for (int i = 0; i < doctors.size(); i++){
+                    Doctor d = doctors.get(i);
+                    //TODO: agregar interaccion con otros doctores
+                    double nearestZombieDistance = Double.MAX_VALUE;
+                    double nearestZombieDirX = 0;
+                    double nearestZombieDirY = 0;
+                    for (Zombie z : zombies) {
+                        //TODO: agregar aporte (con optimizacion) para zombies
+                        double dx = d.getX() - z.getX();
+                        double dy = d.getY() - z.getY();
+                        double distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < nearestZombieDistance) {
+                            nearestZombieDistance = distance;
+                            nearestZombieDirX = dx / distance;
+                            nearestZombieDirY = dy / distance;
+                        }
+                    }
+                    nd[i][X] -= nearestZombieDirX; //TODO: agregar cuenta A ....
+                    nd[i][Y] -= nearestZombieDirY;
+                }
+
+                for( int i = 0; i < zombies.size() ; i++){
+                    Zombie z = zombies.get(i);
+                    nz[i][X] += z.getTargetDirection()[X];
+                    nz[i][Y] += z.getTargetDirection()[Y];
+                }
+
+                for(int i = 0; i < civilians.size(); i++){
+                    civilians.get(i).move(DT,new double[]{nc[i][X], nc[i][Y]},false); //TODO: evaluar contactos!!
+                }
+                for(int i = 0; i < doctors.size(); i++){
+                    doctors.get(i).move(DT,new double[]{nd[i][X], nd[i][Y]},false); //TODO: evaluar contactos!!
+                }
+                for(int i = 0; i < zombies.size(); i++){
+                    zombies.get(i).move(DT,new double[]{nz[i][X], nz[i][Y]},false); //TODO: evaluar contactos!!
+                }
+                return new Time(currentTime, civilians, zombies, doctors);
+            }
+
+
+            private double[] getInteraction(Agent h1, Agent h2, int a, int b) {
+                double dx = h1.getX() - h2.getX(); //Esto por ahi se pouede poner como metodo en Agent
+                double dy = h1.getY() - h2.getY();
+                double modulus = Math.sqrt(dx * dx + dy * dy);
+                double ex = dx / modulus;
+                double ey = dy / modulus;
+
+                double nx = ex * a * Math.exp(-modulus / b);
+                double ny = ey * a * Math.exp(-modulus / b);
+                return new double[]{nx, ny, modulus, ex, ey};
+            }
+        };
+    }
 }
