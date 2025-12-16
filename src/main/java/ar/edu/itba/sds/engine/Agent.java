@@ -62,4 +62,13 @@ public class Agent {
     public boolean isDoctor() {
         return isDoctor;
     }
+
+    @Override
+    public String toString(){
+        return x + " " + y;
+    }
+
+    public static double getRmin(){
+        return RMIN;
+    }
 }

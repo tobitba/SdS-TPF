@@ -26,7 +26,10 @@ public class Field implements Iterable<Time> {
 
     public Field(double borderRadius, int civilianCount, int zombieCount, int doctorCount, double maxTime) {
         this.borderRadius = borderRadius;
-        HumanGenerator.generate(civilianCount, zombieCount, doctorCount, civilians::add, zombies::add, doctors::add, borderRadius);
+        //HumanGenerator.generate(
+        // civilianCount, zombieCount,
+        // doctorCount, civilians::add,
+        // zombies::add, doctors::add, borderRadius);
         this.maxTime = maxTime;
     }
 
