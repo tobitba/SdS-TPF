@@ -6,6 +6,7 @@ import ar.edu.itba.sds.engine.Doctor;
 import ar.edu.itba.sds.engine.Zombie;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class HumanGenerator {
@@ -15,53 +16,44 @@ public class HumanGenerator {
                                       Consumer<Doctor> doctorConsumer, Consumer<Zombie> zombieConsumer, double fieldRadius){
         double initialHumanRadius = Agent.getRmin();
         GeneratedGrid grid = new GeneratedGrid(fieldRadius);
-        generateHuman(civilianCount,civilianConsumer,initialHumanRadius, fieldRadius, false, grid);
-        //generateHuman(doctorCount,doctorConsumer,initialHumanRadius, fieldRadius, true, grid);  TODO:ver como hacer lindo esto xd
+        generateHuman(civilianCount,civilianConsumer,initialHumanRadius, fieldRadius, grid, (x,y) -> new Civilian(x,y,0,0));
+        generateHuman(doctorCount,doctorConsumer,initialHumanRadius, fieldRadius, grid, (x,y) -> new Doctor(x,y,0,0));
         zombieConsumer.accept(new Zombie(0,0,0,0,false));
     }
 
 
-    private static void generateHuman(
+    private static <T extends Agent> void generateHuman(
             int particleNumber,
-            Consumer<Civilian> consumer,
-            double initialRadius, double fieldRadius, boolean isDoctor, GeneratedGrid grid) {
+            Consumer<T> consumer,
+            double initialRadius, double fieldRadius, GeneratedGrid grid, BiFunction<Double, Double, T> agentFactory) {
         double rMin = 1.0 + initialRadius;
         double rMax = fieldRadius - 1.0 - initialRadius;
         Random random = new Random();
         random.setSeed(System.currentTimeMillis());
-        double x;
-        double y;
-        double r;
-        double theta;
+        double x, y, r, theta;
+        Cell cell;
         double cellSize = 2 * initialRadius;
         for (int i = 0; i < particleNumber; i++) {
-            theta = 2 * Math.PI * random.nextDouble();
-            r = Math.sqrt(
-                    random.nextDouble() * (rMax * rMax - rMin * rMin) + rMin * rMin
-            );
-            x = r * Math.cos(theta);
-            y = r * Math.sin(theta);
-            int ci = (int) Math.floor(x / cellSize);
-            int cj = (int) Math.floor(y / cellSize);
-            Cell cell = new Cell(ci,cj);
+
             int intentos = 0;
-            while(grid.checkCollision(x,y,cell) && intentos < MAX_INTENTOS){
+            do {
                 theta = 2 * Math.PI * random.nextDouble();
-                r = Math.sqrt(
-                        random.nextDouble() * (rMax * rMax - rMin * rMin) + rMin * rMin
-                );
+                r = Math.sqrt(random.nextDouble() * (rMax * rMax - rMin * rMin) + rMin * rMin);
                 x = r * Math.cos(theta);
                 y = r * Math.sin(theta);
-                cell.setI((int) Math.floor(x / cellSize));
-                cell.setJ((int) Math.floor(y / cellSize));
+                int ci = (int) Math.floor(x / cellSize);
+                int cj = (int) Math.floor(y / cellSize);
+                cell = new Cell(ci,cj);
                 intentos++;
-            }
+            } while(grid.checkCollision(x,y,cell) && intentos < MAX_INTENTOS);
+
             if(intentos == MAX_INTENTOS){
-                throw new RuntimeException("could not fit humans on field. Try lowering human count");
+                throw new RuntimeException("Could not fit humans on field. Try lowering human count");
             }
-            Civilian civilian = new Civilian(x, y, 0, 0);
-            grid.addAgent(civilian, cell);
-            consumer.accept(civilian);
+            T agent = agentFactory.apply(x, y);
+            grid.addAgent(agent, cell);
+            consumer.accept(agent);
+
         }
     }
 
@@ -91,6 +83,7 @@ public class HumanGenerator {
         }
 
         public boolean checkCollision(double x, double y, Cell cell) {
+            //TODO: hacer check con radios, no solo con el centro
             for(int[] direction : directions){
                 Cell neighborCell = new Cell(cell.i + direction[0], cell.j + direction[1]);
                 List<Agent> agents = grid.get(neighborCell);

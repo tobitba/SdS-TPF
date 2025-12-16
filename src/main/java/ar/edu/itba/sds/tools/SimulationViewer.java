@@ -1,5 +1,6 @@
 package ar.edu.itba.sds.tools;
 import ar.edu.itba.sds.engine.Agent;
+import ar.edu.itba.sds.engine.Civilian;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,9 +51,11 @@ public class SimulationViewer extends JPanel {
             int r = 4; // radio visual del agente
 
             if (a.isDoctor()) {
-                g2.setColor(Color.RED);
-            } else {
                 g2.setColor(Color.BLUE);
+            } else if(a instanceof Civilian) {
+                g2.setColor(Color.PINK);
+            }else {
+                g2.setColor(Color.GREEN);
             }
 
             g2.fillOval(px - r, py - r, 2 * r, 2 * r);
