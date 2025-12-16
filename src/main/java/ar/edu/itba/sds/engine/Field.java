@@ -93,20 +93,31 @@ public class Field implements Iterable<Time> {
 
                 for (int i = 0; i < doctors.size(); i++){
                     Doctor d = doctors.get(i);
-                    //TODO: agregar interaccion con otros doctores
+                    for(int j = i + 1; j < doctors.size(); j++){
+                        Doctor d2 = doctors.get(j);
+                        double[] n = getInteraction(d, d2, A_H, B_H);
+
+                        nd[i][X] += n[X];
+                        nd[i][Y] += n[Y];
+                        nd[j][X] -= n[X];
+                        nd[j][Y] -= n[Y];
+                    }
                     double nearestZombieDistance = Double.MAX_VALUE;
                     double nearestZombieDirX = 0;
                     double nearestZombieDirY = 0;
-                    for (Zombie z : zombies) {
-                        //TODO: agregar aporte (con optimizacion) para zombies
-                        double dx = d.getX() - z.getX();
-                        double dy = d.getY() - z.getY();
-                        double distance = Math.sqrt(dx * dx + dy * dy);
+                    for (int j = 0; j < zombies.size(); j++) {
+                        Zombie z = zombies.get(j);
+                        double[] interaction = getInteraction(d,z,A_Z,B_Z); //TODO: Revisar que A y B ponemos aca
+                        double distance = interaction[2];
                         if (distance < nearestZombieDistance) {
+                            double dx = d.getX() - z.getX();
+                            double dy = d.getY() - z.getY();
                             nearestZombieDistance = distance;
                             nearestZombieDirX = dx / distance;
                             nearestZombieDirY = dy / distance;
                         }
+                        nz[j][X] -= interaction[X];
+                        nz[j][Y] -= interaction[Y];
                     }
                     nd[i][X] -= nearestZombieDirX; //TODO: agregar cuenta A ....
                     nd[i][Y] -= nearestZombieDirY;
