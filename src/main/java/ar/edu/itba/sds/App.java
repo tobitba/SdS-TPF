@@ -1,7 +1,6 @@
 package ar.edu.itba.sds;
 
 import ar.edu.itba.sds.engine.*;
-import ar.edu.itba.sds.tools.HumanGenerator;
 import ar.edu.itba.sds.tools.SimulationViewer;
 import ar.edu.itba.sds.tools.Time;
 
@@ -21,8 +20,15 @@ public class App {
         agents.addAll(zombies);*/
         //SimulationViewer.show(agents,11);
 
-        Field field = new Field(11,3,1,5);
+        Field field = new Field(11,11,0, 10);
         Iterator<Time> timeIterator = field.iterator();
-        timeIterator.forEachRemaining(System.out::println);
+        timeIterator.forEachRemaining(t -> {
+            List<Agent> agents = new ArrayList<>();
+            agents.addAll(t.civilians());
+            agents.addAll(t.zombies());
+            agents.addAll(t.doctors());
+
+            SimulationViewer.show(agents, 11);
+        });
     }
 }

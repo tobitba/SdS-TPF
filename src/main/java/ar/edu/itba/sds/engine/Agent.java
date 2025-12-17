@@ -17,6 +17,9 @@ public class Agent {
     private final static double TAU = 0.5;
     private final static double BETA = 0.9;
 
+    private final static int X = 0;
+    private final static int Y = 1;
+
     public Agent(double x, double y, double vx, double vy, boolean isDoctor) {
         this.x = x;
         this.y = y;
@@ -26,18 +29,24 @@ public class Agent {
         r = RMIN;
     }
 
-    public void move(double dt, double[] unitDirVec, boolean inContact) {
-        double vabs;
+    public void move(double dt, double[] targetPosition, boolean inContact) {
+        double dx = targetPosition[X] - x;
+        double dy = targetPosition[Y] - y;
+        double modulus = Math.sqrt(dx * dx + dy * dy);
+
+        double unitDirVecX = dx / modulus;
+        double unitDirVecY = dy / modulus;
+        double vAbs;
         if (inContact) {
             r = RMIN;
-            vabs = VMAX;
+            vAbs = VMAX;
         }
         else {
             r = Math.min(RMAX, r + RMAX / (TAU / dt));
-            vabs = VMAX * Math.pow((r - RMIN) / (RMAX - RMIN), BETA);
+            vAbs = VMAX * Math.pow((r - RMIN) / (RMAX - RMIN), BETA);
         }
-        vx = unitDirVec[0] * vabs;
-        vy = unitDirVec[1] * vabs;
+        vx = unitDirVecX * vAbs;
+        vy = unitDirVecY * vAbs;
 
         x = x + vx * dt;
         y = y + vy * dt;
