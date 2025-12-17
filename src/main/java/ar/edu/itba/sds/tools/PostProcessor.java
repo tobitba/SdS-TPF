@@ -9,6 +9,9 @@ import java.io.IOException;
 
 public class PostProcessor implements Closeable {
     private static final String OUTPUT_FILE_NAME = "dynamicOutput.txt";
+    private static final String CIVILIANS = "CIVILIANS\n";
+    private static final String DOCTORS = "DOCTORS\n";
+    private static final String ZOMBIES = "ZOMBIES\n";
     private final BufferedWriter writer;
 
     public PostProcessor(String outputName) {
@@ -25,12 +28,12 @@ public class PostProcessor implements Closeable {
         try {
             writer.write(String.valueOf(time.time()));
             writer.newLine();
+            writer.write(CIVILIANS);
             time.civilians().forEach(this::processParticle);
-            writer.newLine();
+            writer.write(DOCTORS);
             time.doctors().forEach(this::processParticle);
-            writer.newLine();
+            writer.write(ZOMBIES);
             time.zombies().forEach(this::processParticle);
-            writer.newLine();
 
         } catch (IOException e) {
             throw new RuntimeException("Error writing on output file");

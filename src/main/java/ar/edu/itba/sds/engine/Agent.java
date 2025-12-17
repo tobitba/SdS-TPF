@@ -74,7 +74,7 @@ public class Agent {
 
     @Override
     public String toString(){
-        return x + " " + y;
+        return x + "," + y + "," + r;
     }
 
     public static double getRmin(){
