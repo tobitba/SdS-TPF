@@ -9,8 +9,8 @@ public class Agent {
     private static final double VMAX = 4;
 
     private double r;
-    private static final double RMAX = 0.15;
-    private static final double RMIN = 0.35;
+    private static final double RMAX = 0.35;
+    private static final double RMIN = 0.15;
 
     private final boolean isDoctor;
     private boolean transforming = false;

@@ -13,6 +13,11 @@ public class Zombie extends Agent {
         return new Zombie(a.getX(), a.getY(), a.getVx(), a.getVy(), a.isDoctor());
     }
 
+    @Override
+    public void move(double dt, double[] targetPosition, boolean inContact){
+        super.move(dt,targetPosition,inContact);
+        setDistanceToTarget(Double.MAX_VALUE);
+    }
     public void setTargetDirection(double[] targetDirection) {
         this.targetDirection = targetDirection;
     }

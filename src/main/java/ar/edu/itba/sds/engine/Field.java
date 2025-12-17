@@ -40,7 +40,7 @@ public class Field implements Iterable<Time> {
     @Override
     public Iterator<Time> iterator() {
         return new Iterator<>() {
-            private final static double DT = 0.8;
+            private final static double DT = 0.05;
 
             @Override
             public boolean hasNext() {
@@ -86,7 +86,7 @@ public class Field implements Iterable<Time> {
                         nc[i][Y] -= n[Y];
                         if (z.getDistanceToTarget() > n[2]) {
                             z.setDistanceToTarget(n[2]);
-                            z.setTargetDirection(new double[]{n[3], n[4]}); //sisi ya se que esta feo.... despues vemos como lo mejoramos
+                            z.setTargetDirection(new double[]{-n[3], -n[4]}); //sisi ya se que esta feo.... despues vemos como lo mejoramos
                         }
                     }
 
@@ -128,8 +128,8 @@ public class Field implements Iterable<Time> {
                         double[] interaction = getInteraction(z, d, A_Z, B_Z); //TODO: Revisar que A y B ponemos aca
                         double distance = interaction[2];
                         if (distance < nearestZombieDistance) {
-                            double dx = d.getX() - z.getX();
-                            double dy = d.getY() - z.getY();
+                            double dx = z.getX() - d.getX();
+                            double dy = z.getY() - d.getY();
                             nearestZombieDistance = distance;
                             nearestZombieDirX = dx / distance;
                             nearestZombieDirY = dy / distance;
@@ -161,8 +161,8 @@ public class Field implements Iterable<Time> {
 
                 for (int i = 0; i < zombies.size(); i++) {
                     Zombie z = zombies.get(i);
-                    nz[i][X] += z.getTargetDirection()[X];
-                    nz[i][Y] += z.getTargetDirection()[Y];
+                    nz[i][X] += z.getTargetDirection()[X] * A_Z;
+                    nz[i][Y] += z.getTargetDirection()[Y] * A_Z;
                     //Interacción con la pared
                     double x = z.getX();
                     double y = z.getY();
@@ -177,20 +177,42 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nz[i][X] -= ex * A_Z * Math.exp(-distToWall / B_H);
-                    nz[i][Y] -= ey * A_Z * Math.exp(-distToWall / B_H);
+                    nz[i][X] -= ex * A_Z * Math.exp(-distToWall);
+                    nz[i][Y] -= ey * A_Z * Math.exp(-distToWall);
 
                 }
 
                 /// TODO: Acá abajo evaluar contactos
+                double noiseAmp = 0.052;
                 for (int i = 0; i < civilians.size(); i++) {
-                    civilians.get(i).move(DT, new double[]{nc[i][X], nc[i][Y]}, false);
+                    double destX = civilians.get(i).getX() + nc[i][X];
+                    double destY = civilians.get(i).getY() + nc[i][Y];
+
+                    double dx = destX - civilians.get(i).getX();
+                    double dy = destY - civilians.get(i).getY();
+
+                    double theta = Math.atan2(dy, dx);
+                    double noise = (Math.random() - 0.5) * noiseAmp;
+                    double mag = Math.sqrt(dx*dx + dy*dy);
+
+                    // Nueva dirección con ruido
+                    double finalDx = mag * Math.cos(theta + noise);
+                    double finalDy = mag * Math.sin(theta + noise);
+
+                    civilians.get(i).move(DT, new double[]{
+                            civilians.get(i).getX() + finalDx,
+                            civilians.get(i).getY() + finalDy
+                    }, false);
                 }
                 for (int i = 0; i < doctors.size(); i++) {
-                    doctors.get(i).move(DT, new double[]{nd[i][X], nd[i][Y]}, false);
+                    doctors.get(i).move(DT, new double[]{
+                            doctors.get(i).getX() + nd[i][X],
+                            doctors.get(i).getY() + nd[i][Y]},false);
                 }
                 for (int i = 0; i < zombies.size(); i++) {
-                    zombies.get(i).move(DT, new double[]{nz[i][X], nz[i][Y]}, false);
+                    zombies.get(i).move(DT, new double[]{
+                            zombies.get(i).getX() + nz[i][X],
+                            zombies.get(i).getY() + nz[i][Y]},false);
                 }
                 currentTime += DT;
                 return new Time(currentTime, civilians, zombies, doctors);

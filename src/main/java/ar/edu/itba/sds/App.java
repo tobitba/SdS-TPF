@@ -6,14 +6,12 @@ import ar.edu.itba.sds.tools.SimulationViewer;
 import ar.edu.itba.sds.tools.Time;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class App {
     public static void main(String[] args)  {
 
-        Field field = new Field(11,3,1, 10);
+        Field field = new Field(11,10,2, 20);
         Iterator<Time> timeIterator = field.iterator();
         try(PostProcessor postProcessor = new PostProcessor("dynamicOutput.txt")) {
             postProcessor.processEpoch(field.getCurrentTime()); //t = 0
