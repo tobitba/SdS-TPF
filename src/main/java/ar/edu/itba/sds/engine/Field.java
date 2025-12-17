@@ -33,6 +33,9 @@ public class Field implements Iterable<Time> {
         this.maxTime = maxTime;
     }
 
+    public Time getCurrentTime() {
+        return new Time(currentTime, civilians, zombies, doctors);
+    }
 
     @Override
     public Iterator<Time> iterator() {
@@ -90,7 +93,7 @@ public class Field implements Iterable<Time> {
                     //Interacción con la pared
                     double x = c1.getX();
                     double y = c1.getY();
-                    double r = Math.sqrt(x*x + y*y);
+                    double r = Math.sqrt(x * x + y * y);
                     if (r < 1e-9)
                         continue;
                     double distToWall = borderRadius - r;
@@ -101,8 +104,8 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nc[i][X] -= ex * A_Z * Math.exp(- distToWall / B_H);
-                    nc[i][Y] -= ey * A_Z * Math.exp(- distToWall / B_H);
+                    nc[i][X] -= ex * A_Z * Math.exp(-distToWall / B_H);
+                    nc[i][Y] -= ey * A_Z * Math.exp(-distToWall / B_H);
 
                 }
 
@@ -140,7 +143,7 @@ public class Field implements Iterable<Time> {
                     //Interacción con la pared
                     double x = d.getX();
                     double y = d.getY();
-                    double r = Math.sqrt(x*x + y*y);
+                    double r = Math.sqrt(x * x + y * y);
                     if (r < 1e-9)
                         continue;
                     double distToWall = borderRadius - r;
@@ -151,8 +154,8 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nd[i][X] -= ex * A_Z * Math.exp(- distToWall / B_H);
-                    nd[i][Y] -= ey * A_Z * Math.exp(- distToWall / B_H);
+                    nd[i][X] -= ex * A_Z * Math.exp(-distToWall / B_H);
+                    nd[i][Y] -= ey * A_Z * Math.exp(-distToWall / B_H);
 
                 }
 
@@ -163,7 +166,7 @@ public class Field implements Iterable<Time> {
                     //Interacción con la pared
                     double x = z.getX();
                     double y = z.getY();
-                    double r = Math.sqrt(x*x + y*y);
+                    double r = Math.sqrt(x * x + y * y);
                     if (r < 1e-9)
                         continue;
                     double distToWall = borderRadius - r;
@@ -174,8 +177,8 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nz[i][X] -= ex * A_Z * Math.exp(- distToWall / B_H);
-                    nz[i][Y] -= ey * A_Z * Math.exp(- distToWall / B_H);
+                    nz[i][X] -= ex * A_Z * Math.exp(-distToWall / B_H);
+                    nz[i][Y] -= ey * A_Z * Math.exp(-distToWall / B_H);
 
                 }
 

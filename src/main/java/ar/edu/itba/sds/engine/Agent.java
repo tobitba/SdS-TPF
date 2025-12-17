@@ -13,6 +13,7 @@ public class Agent {
     private static final double RMIN = 0.35;
 
     private final boolean isDoctor;
+    private boolean transforming = false;
 
     private final static double TAU = 0.5;
     private final static double BETA = 0.9;
@@ -74,10 +75,18 @@ public class Agent {
 
     @Override
     public String toString(){
-        return x + "," + y + "," + r;
+        return x + "," + y + "," + r + "," + transforming;
     }
 
     public static double getRmin(){
         return RMIN;
+    }
+
+    public boolean isTransforming() {
+        return transforming;
+    }
+
+    public void setTransforming(boolean transforming) {
+        this.transforming = transforming;
     }
 }

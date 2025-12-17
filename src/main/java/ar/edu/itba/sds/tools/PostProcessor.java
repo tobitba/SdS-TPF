@@ -34,6 +34,7 @@ public class PostProcessor implements Closeable {
             time.doctors().forEach(this::processParticle);
             writer.write(ZOMBIES);
             time.zombies().forEach(this::processParticle);
+            writer.newLine();
 
         } catch (IOException e) {
             throw new RuntimeException("Error writing on output file");

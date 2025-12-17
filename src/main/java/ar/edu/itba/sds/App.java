@@ -13,9 +13,10 @@ import java.util.List;
 public class App {
     public static void main(String[] args)  {
 
-        Field field = new Field(11,1,0, 10);
+        Field field = new Field(11,3,1, 10);
         Iterator<Time> timeIterator = field.iterator();
         try(PostProcessor postProcessor = new PostProcessor("dynamicOutput.txt")) {
+            postProcessor.processEpoch(field.getCurrentTime()); //t = 0
             timeIterator.forEachRemaining(postProcessor::processEpoch);
         }catch (IOException e) {
             throw new RuntimeException(e);
