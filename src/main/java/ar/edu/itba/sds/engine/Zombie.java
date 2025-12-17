@@ -7,16 +7,14 @@ public class Zombie extends Agent {
 
     public Zombie(double x, double y, double vx, double vy, boolean isDoctor) {
         super(x, y, vx, vy, isDoctor);
-    }
-
-    public Zombie infect(Agent a) {
-        return new Zombie(a.getX(), a.getY(), a.getVx(), a.getVy(), a.isDoctor());
+        isZombie = true;
     }
 
     @Override
-    public void move(double dt, double[] targetPosition, boolean inContact){
-        super.move(dt,targetPosition,inContact);
+    public MoveResult move(double dt, double[] targetPosition){
+        MoveResult moveResult = super.move(dt,targetPosition);
         setDistanceToTarget(Double.MAX_VALUE);
+        return moveResult;
     }
     public void setTargetDirection(double[] targetDirection) {
         this.targetDirection = targetDirection;
@@ -32,5 +30,20 @@ public class Zombie extends Agent {
 
     public void setDistanceToTarget(double distanceToTarget) {
         this.distanceToTarget = distanceToTarget;
+    }
+
+    @Override
+    protected MoveResult handleZombieEvent(double dt) {
+        if (timeFighting >= fightingTime) {
+            Agent collidingAgent = getCollidingAgent().orElseThrow();
+            fightingOff();
+            if (collidingAgent.lost())
+                return MoveResult.NOTHING;
+            else
+                return MoveResult.CURED;
+        }
+
+        timeFighting += dt;
+        return MoveResult.FIGHTING;
     }
 }
