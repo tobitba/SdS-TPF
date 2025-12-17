@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-public class HumanGenerator {
+public class AgentGenerator {
     private static final int MAX_INTENTOS = 1000;
 
     public static void generateAgents(int civilianCount, int doctorCount, Consumer<Civilian> civilianConsumer,

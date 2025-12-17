@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ar.edu.itba.sds.tools.HumanGenerator;
+import ar.edu.itba.sds.tools.AgentGenerator;
 import ar.edu.itba.sds.tools.Time;
 
 public class Field implements Iterable<Time> {
@@ -26,7 +26,7 @@ public class Field implements Iterable<Time> {
 
     public Field(double borderRadius, int civilianCount, int doctorCount, double maxTime) {
         this.borderRadius = borderRadius;
-        HumanGenerator.generateAgents(
+        AgentGenerator.generateAgents(
                 civilianCount,
                 doctorCount, civilians::add,
                 doctors::add, zombies::add, borderRadius);
