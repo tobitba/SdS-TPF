@@ -1,120 +1,147 @@
-# Generador de video / GIF para simulación Zombies CPM
-# --------------------------------------------------
-# Uso:
-#   python render_simulation.py salida.txt --radius 10 --fps 30 --out animacion.gif
-#   python render_simulation.py salida.txt --radius 10 --fps 60 --out animacion.mp4
-
 import argparse
-import math
+import cv2
 import numpy as np
-from pathlib import Path
+import sys
+import os
 
-import matplotlib.pyplot as plt
-import imageio.v2 as imageio
+# ================= CONFIGURACIÓN =================
+COLORS = {
+    "CIVILIANS": (153, 153, 153),  # Gris
+    "DOCTORS": (180, 119, 31),     # Azul (BGR)
+    "ZOMBIES": (102, 204, 102),    # Verde (BGR)
+    "TRANSFORMING": (0, 204, 255)  # Naranja (BGR)
+}
+BACKGROUND_COLOR = (255, 255, 255) # Blanco
+WINDOW_SIZE = 800
 
-# ===================== PARSER =====================
-def parse_frames(path):
-    frames = []
-    current = []
+def is_time_line(line):
+    """Detecta si una línea es solo un número (el tiempo)."""
+    try:
+        # Si no tiene comas y se puede convertir a float, es el tiempo
+        if ',' not in line:
+            float(line)
+            return True
+        return False
+    except ValueError:
+        return False
+
+def process_simulation(input_file, output_file, field_radius, fps):
+    if not os.path.exists(input_file):
+        print(f"❌ Error: No se encuentra el archivo {input_file}")
+        return
+
+    # Escala automática
+    scale = (WINDOW_SIZE / 2) / (field_radius * 1.1)
+    center_offset = WINDOW_SIZE / 2
+
+    # Configuración de video
+    # mp4v es compatible con la mayoría de los reproductores
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(str(output_file), fourcc, fps, (WINDOW_SIZE, WINDOW_SIZE))
+
+    print(f"🎬 Procesando: {input_file}")
+    print(f"   Salida: {output_file}")
+
+    # Lienzo en blanco
+    canvas = np.full((WINDOW_SIZE, WINDOW_SIZE, 3), BACKGROUND_COLOR, dtype=np.uint8)
+
+    current_agents = []
     mode = None
+    frames_count = 0
 
-    with open(path, 'r') as f:
-        for raw in f:
-            line = raw.strip()
+    # Leemos el archivo línea por línea
+    with open(input_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line: continue
 
-            if not line:
-                if current:
-                    frames.append(current)
-                    current = []
-                mode = None
+            # 1. DETECCIÓN DE CAMBIO DE FRAME
+            # Si la línea es un número (ej: "0.0", "0.05"), es un nuevo frame.
+            if is_time_line(line):
+                # Si ya teníamos agentes acumulados del frame anterior, dibujamos y guardamos
+                if current_agents or frames_count > 0: # frames_count > 0 asegura procesar frames vacíos si los hubiera
+                    if current_agents:
+                        draw_frame(out, canvas, current_agents, field_radius, scale, center_offset)
+
+                    # Guardamos frame (incluso si no hubo agentes, se guarda el canvas anterior/limpio)
+                    # Nota: La lógica original dibujaba al encontrar el tiempo SIGUIENTE.
+                    # Aquí dibujamos lo que acumulamos hasta ahora.
+
+                    frames_count += 1
+                    if frames_count % 50 == 0:
+                        sys.stdout.write(f"\r   Frames procesados: {frames_count}")
+                        sys.stdout.flush()
+
+                    # Resetear para el nuevo frame
+                    current_agents = []
+                    canvas[:] = BACKGROUND_COLOR # Limpiar pantalla
+
+                # (Opcional) Podrías guardar el tiempo actual si lo necesitas mostrar en pantalla
+                # current_time = float(line)
                 continue
 
+            # 2. DETECCIÓN DE TIPO
             if line in {"CIVILIANS", "DOCTORS", "ZOMBIES"}:
                 mode = line
                 continue
 
-            if line.startswith("currentTime"):
-                continue
+            # 3. PARSEO DE AGENTES
+            if mode:
+                # Esperamos x,y,r,transforming
+                parts = line.split(',')
+                if len(parts) >= 3:
+                    try:
+                        agent = {
+                            'x': float(parts[0]),
+                            'y': float(parts[1]),
+                            'r': float(parts[2]),
+                            'type': mode,
+                            'trans': False
+                        }
+                        # Intentar leer el booleano de transformación si existe
+                        if len(parts) >= 4:
+                            agent['trans'] = (parts[3].strip().lower() == 'true')
 
-            if mode is None:
-                continue
+                        current_agents.append(agent)
+                    except ValueError:
+                        pass # Ignorar líneas corruptas
 
-            x, y, r, transforming = line.split(',')
-            current.append({
-                "type": mode,
-                "x": float(x),
-                "y": float(y),
-                "r": float(r),
-                "transforming": transforming == 'true'
-            })
+        # 4. PROCESAR EL ÚLTIMO FRAME (que quedó pendiente al terminar el archivo)
+        if current_agents:
+            draw_frame(out, canvas, current_agents, field_radius, scale, center_offset)
+            frames_count += 1
+            print(f"\r   Frames procesados: {frames_count}")
 
-    if current:
-        frames.append(current)
+    out.release()
+    print(f"\n✅ Video generado correctamente.")
 
-    return frames
+def draw_frame(video_writer, img, agents, R, scale, offset):
+    # Dibujar Recinto (Círculo negro)
+    r_pixel = int(R * scale)
+    cv2.circle(img, (int(offset), int(offset)), r_pixel, (0,0,0), 2)
 
-# ===================== DRAW =====================
-COLORS = {
-    "CIVILIANS": "#999999",
-    "DOCTORS": "#1f77b4",
-    "ZOMBIES": "#66cc66",
-    "TRANSFORMING": "#ffcc00"
-}
-
-
-def draw_frame(ax, agents, R):
-    ax.clear()
-    ax.set_aspect('equal')
-    ax.set_xlim(-R, R)
-    ax.set_ylim(-R, R)
-    ax.axis('off')
-
-    # recinto
-    circle = plt.Circle((0, 0), R, fill=False, color='black', linewidth=2)
-    ax.add_patch(circle)
-
+    # Dibujar Agentes
     for a in agents:
-        color = COLORS[a['type']]
-        if a['transforming']:
-            color = COLORS['TRANSFORMING']
-        circ = plt.Circle((a['x'], a['y']), a['r'], color=color)
-        ax.add_patch(circ)
+        px = int(a['x'] * scale + offset)
+        py = int(-a['y'] * scale + offset) # Invertir eje Y
+        pr = int(max(2, a['r'] * scale))   # Radio mínimo
 
-# ===================== MAIN =====================
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input', type=Path)
-    parser.add_argument('--radius', type=float, required=True)
-    parser.add_argument('--fps', type=int, default=30)
-    parser.add_argument('--out', type=Path, default=Path('animacion.gif'))
-    args = parser.parse_args()
+        # Color
+        color = COLORS["TRANSFORMING"] if a['trans'] else COLORS.get(a['type'], (0,0,0))
 
-    frames = parse_frames(args.input)
-    print(f"Frames cargados: {len(frames)}")
+        cv2.circle(img, (px, py), pr, color, -1)
 
-    fig, ax = plt.subplots(figsize=(6, 6))
-
-    images = []
-    for i, agents in enumerate(frames):
-        draw_frame(ax, agents, args.radius)
-        fig.canvas.draw()
-        # Convertir el buffer RGBA de matplotlib a array numpy
-        buf = fig.canvas.buffer_rgba()
-        # IMPORTANTE: copiar el buffer, si no todos los frames apuntan al mismo array
-        image = np.asarray(buf).copy()
-        images.append(image)
-
-        if i % 50 == 0:
-            print(f"Renderizando frame {i}/{len(frames)}")
-
-    duration = 1 / args.fps
-    if args.out.suffix == '.gif':
-        imageio.mimsave(args.out, images, duration=duration)
-    else:
-        imageio.mimsave(args.out, images, fps=args.fps)
-
-    print(f"Archivo generado: {args.out}")
-
+    # Escribir frame al video
+    video_writer.write(img)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', help="Archivo dynamicOutput.txt")
+    parser.add_argument('--radius', type=float, default=11.0)
+    parser.add_argument('--fps', type=int, default=30)
+    parser.add_argument('--out', default='simulacion.mp4')
+
+    args = parser.parse_args()
+
+    # Ejecutar
+    process_simulation(args.input, args.out, args.radius, args.fps)
