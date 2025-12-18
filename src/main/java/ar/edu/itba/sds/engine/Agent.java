@@ -46,6 +46,7 @@ public abstract class Agent {
                 return handleZombieEvent(dt);
             }
             handleNormalRepulsion(dt);
+            setCollidingAgent(null);
             return MoveResult.NOTHING;
         }
 
