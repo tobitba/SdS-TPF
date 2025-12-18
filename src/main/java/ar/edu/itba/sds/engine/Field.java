@@ -315,8 +315,7 @@ public class Field implements Iterable<Time> {
 
                 if (d2 > r2) {
                     double dist = Math.sqrt(d2);
-                    double eps = 1e-6;
-                    double target = r - eps;
+                    double target = r - a.getR();
                     double scale = target / dist;
                     a.setX(x * scale);
                     a.setY(y * scale);
