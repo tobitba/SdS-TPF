@@ -150,8 +150,9 @@ public class Field implements Iterable<Time> {
                         nz[j][X] += interaction[X];
                         nz[j][Y] += interaction[Y];
                     }
-                    nd[i][X] += nearestZombieDirX; //TODO: Acá usamos la dirección, tenemos que calcular el nd y se suma eso
-                    nd[i][Y] += nearestZombieDirY;
+                    double CHASE_FORCE = 2.0;
+                    nd[i][X] += nearestZombieDirX * CHASE_FORCE * Math.exp(- nearestZombieDistance / 1); //TODO: pensar que A y B ponemos aca
+                    nd[i][Y] += nearestZombieDirY * CHASE_FORCE * Math.exp(- nearestZombieDistance / 1); //Puse A=2 y B=1 por ahora
 
                     //Interacción con la pared
                     double x = d.getX();
