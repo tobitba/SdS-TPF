@@ -132,8 +132,8 @@ public class Field implements Iterable<Time> {
                         nd[j][Y] += n[Y];
                     }
                     double nearestZombieDistance = Double.MAX_VALUE;
-                    double nearestZombieDirX = 0;
-                    double nearestZombieDirY = 0;
+                    double nearestZombieForceX = 0;
+                    double nearestZombieForceY = 0;
                     for (int j = 0; j < zombies.size(); j++) {
                         Zombie z = zombies.get(j);
                         if (z.isFighting())
@@ -141,17 +141,15 @@ public class Field implements Iterable<Time> {
                         double[] interaction = getInteraction(z, d, A_Z, B_Z); //TODO: Revisar que A y B ponemos aca
                         double distance = interaction[2];
                         if (distance < nearestZombieDistance) {
-                            double dx = z.getX() - d.getX();
-                            double dy = z.getY() - d.getY();
                             nearestZombieDistance = distance;
-                            nearestZombieDirX = dx / distance;
-                            nearestZombieDirY = dy / distance;
+                            nearestZombieForceX = interaction[X];
+                            nearestZombieForceY = interaction[Y];
                         }
                         nz[j][X] += interaction[X];
                         nz[j][Y] += interaction[Y];
                     }
-                    nd[i][X] += nearestZombieDirX; //TODO: Acá usamos la dirección, tenemos que calcular el nd y se suma eso
-                    nd[i][Y] += nearestZombieDirY;
+                    nd[i][X] -= nearestZombieForceX;
+                    nd[i][Y] -= nearestZombieForceY;
 
                     //Interacción con la pared
                     double x = d.getX();
