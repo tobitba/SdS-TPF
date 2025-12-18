@@ -60,8 +60,11 @@ public class Field implements Iterable<Time> {
                     //Interaccion con otros civiles
                     for (int j = i + 1; j < civilians.size(); j++) {
                         Civilian c2 = civilians.get(j);
-                        if (c2.isFighting())
-                            continue;
+                        if (c2.isFighting()) { //If another civi is transforming, treat him like a zombie
+                            double[] n = getInteraction(c2, c1, A_Z, B_Z);
+                            nc[i][X] -= n[X];
+                            nc[i][Y] -= n[Y];
+                        }
                         double[] n = getInteraction(c2, c1, A_H, B_H);
 
                         nc[i][X] -= n[X];
@@ -86,8 +89,6 @@ public class Field implements Iterable<Time> {
                     }
                     //Interaccion con zombies
                     for (Zombie z : zombies) {
-                        if (z.isFighting())
-                            continue;
                         double[] n = getInteraction(z, c1, A_Z, B_Z);
                         nc[i][X] -= n[X];
                         nc[i][Y] -= n[Y];
@@ -290,8 +291,36 @@ public class Field implements Iterable<Time> {
                     else
                         civilians.add(new Civilian(z.getX(), z.getY(), z.getVx(), z.getVy()));
                 }
+
+                for(Agent a : civilians) {
+                    checkBounds(a);
+                }
+                for(Agent a : zombies) {
+                    checkBounds(a);
+                }
+                for(Agent a : doctors) {
+                    checkBounds(a);
+                }
+
                 currentTime += DT;
                 return new Time(currentTime, civilians, zombies, doctors);
+            }
+
+            private void checkBounds(Agent a){
+                double x = a.getX();
+                double y = a.getY();
+                double r = borderRadius;
+                double r2 = r * r;
+                double d2 = x*x + y*y;
+
+                if (d2 > r2) {
+                    double dist = Math.sqrt(d2);
+                    double eps = 1e-6;
+                    double target = r - eps;
+                    double scale = target / dist;
+                    a.setX(x * scale);
+                    a.setY(y * scale);
+                }
             }
 
 
