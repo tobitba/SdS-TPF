@@ -16,7 +16,7 @@ public class Doctor extends Agent {
         if (timeFighting >= fightingTime) {
             fightingOff();
             double fightingResult = fightingRandomizer.nextDouble();
-            if (fightingResult < 0.6)
+            if (fightingResult < 0.7)
                 return MoveResult.NOTHING;
             lost = true;
             return MoveResult.TRANSFORMED;
