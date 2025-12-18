@@ -187,6 +187,7 @@ public class Field implements Iterable<Time> {
                             nd[i][X] -= n[X];
                             nd[i][Y] -= n[Y];
                             continue;
+                        }
                         double[] interaction = getInteraction(z, d, A_Z, B_Z);
                         double distance = interaction[2];
                         if (distance < nearestZombieDistance) {
@@ -218,14 +219,12 @@ public class Field implements Iterable<Time> {
 
                     nd[i][X] -= ex * A_W * Math.exp(-distToWall / B_W);
                     nd[i][Y] -= ey * A_W * Math.exp(-distToWall / B_W);
-
                 }
 
                 // ZOMBIES
                 for (int i = 0; i < zombies.size(); i++) {
                     Zombie z = zombies.get(i);
                     if (! z.isFighting()) {
-
                         nz[i][X] += z.getTargetDirection()[X] * A_Z;
                         nz[i][Y] += z.getTargetDirection()[Y] * A_Z;
                         //Interacción con la pared
@@ -241,9 +240,9 @@ public class Field implements Iterable<Time> {
 
                         double ex = distXToWall / distToWall;
                         double ey = distYToWall / distToWall;
-
-                    nz[i][X] -= ex * A_W * Math.exp(-distToWall/ B_W);
-                    nz[i][Y] -= ey * A_W * Math.exp(-distToWall/ B_W);
+                        nz[i][X] -= ex * A_W * Math.exp(-distToWall/ B_W);
+                        nz[i][Y] -= ey * A_W * Math.exp(-distToWall/ B_W);
+                    }
                     for(int j = i + 1; j < zombies.size(); j++){
                         Zombie z2 = zombies.get(j);
                         if (z.isFighting()) {
