@@ -10,7 +10,7 @@ import java.util.Iterator;
 public class App {
     public static void main(String[] args)  {
 
-        Field field = new Field(11,10,1, 40);
+        Field field = new Field(11,60,0, 40);
         Iterator<Time> timeIterator = field.iterator();
         try(PostProcessor postProcessor = new PostProcessor("dynamicOutput.txt")) {
             postProcessor.processEpoch(field.getCurrentTime()); //t = 0

@@ -194,6 +194,15 @@ public class Field implements Iterable<Time> {
 
                     nz[i][X] -= ex * A_Z * Math.exp(-distToWall);
                     nz[i][Y] -= ey * A_Z * Math.exp(-distToWall);
+                    for(int j = i + 1; j < zombies.size(); j++){
+                        Zombie z2 = zombies.get(j);
+                        double[] n = getInteraction(z2, z, A_H, B_H);
+
+                        nz[i][X] -= n[X];
+                        nz[i][Y] -= n[Y];
+                        nz[j][X] += n[X];
+                        nz[j][Y] += n[Y];
+                    }
 
                 }
 
@@ -225,17 +234,39 @@ public class Field implements Iterable<Time> {
                     }
                 }
                 for (int i = 0; i < doctors.size(); i++) {
+                    double destX = doctors.get(i).getX() + nd[i][X];
+                    double destY = doctors.get(i).getY() + nd[i][Y];
+                    double dx = destX - doctors.get(i).getX();
+                    double dy = destY - doctors.get(i).getY();
+                    double theta = Math.atan2(dy, dx);
+                    double noise = (Math.random() - 0.5) * noiseAmp;
+                    double mag = Math.sqrt(dx*dx + dy*dy);
+
+                    // Nueva dirección con ruido
+                    double finalDx = mag * Math.cos(theta + noise);
+                    double finalDy = mag * Math.sin(theta + noise);
                     MoveResult res = doctors.get(i).move(DT, new double[]{
-                            doctors.get(i).getX() + nd[i][X],
-                            doctors.get(i).getY() + nd[i][Y]});
+                            doctors.get(i).getX() + finalDx,
+                            doctors.get(i).getY() + finalDy});
                     if (res.equals(MoveResult.TRANSFORMED)) {
                         toRemoveDoc.add(doctors.get(i));
                     }
                 }
                 for (int i = 0; i < zombies.size(); i++) {
+                    double destX = zombies.get(i).getX() + nz[i][X];
+                    double destY = zombies.get(i).getY() + nz[i][Y];
+                    double dx = destX - zombies.get(i).getX();
+                    double dy = destY - zombies.get(i).getY();
+                    double theta = Math.atan2(dy, dx);
+                    double noise = (Math.random() - 0.5) * noiseAmp;
+                    double mag = Math.sqrt(dx*dx + dy*dy);
+
+                    // Nueva dirección con ruido
+                    double finalDx = mag * Math.cos(theta + noise);
+                    double finalDy = mag * Math.sin(theta + noise);
                     MoveResult res = zombies.get(i).move(DT, new double[]{
-                            zombies.get(i).getX() + nz[i][X],
-                            zombies.get(i).getY() + nz[i][Y]});
+                            zombies.get(i).getX() + finalDx,
+                            zombies.get(i).getY() + finalDy});
                     if (res.equals(MoveResult.CURED)) {
                         toRemoveZom.add(zombies.get(i));
                     }
