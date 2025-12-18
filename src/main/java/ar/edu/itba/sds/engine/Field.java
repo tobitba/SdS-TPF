@@ -309,13 +309,14 @@ public class Field implements Iterable<Time> {
             private void checkBounds(Agent a){
                 double x = a.getX();
                 double y = a.getY();
+                double ar = a.getR();
                 double r = borderRadius;
                 double r2 = r * r;
-                double d2 = x*x + y*y;
+                double d2 = x*x + y*y + ar;
 
                 if (d2 > r2) {
                     double dist = Math.sqrt(d2);
-                    double target = r - a.getR();
+                    double target = r - ar;
                     double scale = target / dist;
                     a.setX(x * scale);
                     a.setY(y * scale);
