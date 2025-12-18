@@ -15,6 +15,8 @@ public class Field implements Iterable<Time> {
     private final static int B_H = 1;
     private final static int A_Z = 8;
     private final static int B_Z = 4;
+    private final static int A_W = 8;
+    private final static int B_W = 1;
 
 
     private final List<Civilian> civilians = new ArrayList<>();
@@ -40,7 +42,7 @@ public class Field implements Iterable<Time> {
     @Override
     public Iterator<Time> iterator() {
         return new Iterator<>() {
-            private final static double DT = 0.05;
+            private final static double DT = 0.01875;
 
             @Override
             public boolean hasNext() {
@@ -78,7 +80,7 @@ public class Field implements Iterable<Time> {
                     for (int j = 0; j < doctors.size(); j++) {
                         Doctor d = doctors.get(j);
                         if (d.isFighting())
-                            continue;
+                            continue;  //TODO: aca no deberia ser igual que en el caso civil vs civil transformando??
                         double[] n = getInteraction(d, c1, A_H, B_H);
 
                         nc[i][X] -= n[X];
@@ -94,7 +96,7 @@ public class Field implements Iterable<Time> {
                         nc[i][Y] -= n[Y];
                         if (z.getDistanceToTarget() > n[2]) {
                             z.setDistanceToTarget(n[2]);
-                            z.setTargetDirection(new double[]{-n[3], -n[4]}); //sisi ya se que esta feo.... despues vemos como lo mejoramos
+                            z.setTargetDirection(new double[]{-n[3], -n[4]});
                         }
                     }
 
@@ -112,15 +114,15 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nc[i][X] -= ex * A_Z * Math.exp(-distToWall / B_H);
-                    nc[i][Y] -= ey * A_Z * Math.exp(-distToWall / B_H);
+                    nc[i][X] -= ex * A_W * Math.exp(-distToWall / B_W);
+                    nc[i][Y] -= ey * A_W * Math.exp(-distToWall / B_W);
 
                 }
 
                 for (int i = 0; i < doctors.size(); i++) {
                     Doctor d = doctors.get(i);
                     if (d.isFighting())
-                        continue;
+                        continue; //TODO: aca no deberia ser igual que en el caso civil vs civil transformando??
                     for (int j = i + 1; j < doctors.size(); j++) {
                         Doctor d2 = doctors.get(j);
                         if (d2.isFighting())
@@ -139,7 +141,7 @@ public class Field implements Iterable<Time> {
                         Zombie z = zombies.get(j);
                         if (z.isFighting())
                             continue;
-                        double[] interaction = getInteraction(z, d, A_Z, B_Z); //TODO: Revisar que A y B ponemos aca
+                        double[] interaction = getInteraction(z, d, A_Z, B_Z);
                         double distance = interaction[2];
                         if (distance < nearestZombieDistance) {
                             double dx = z.getX() - d.getX();
@@ -151,9 +153,8 @@ public class Field implements Iterable<Time> {
                         nz[j][X] += interaction[X];
                         nz[j][Y] += interaction[Y];
                     }
-                    double CHASE_FORCE = 8.0;
-                    nd[i][X] += nearestZombieDirX * CHASE_FORCE * Math.exp(- nearestZombieDistance / 1); //TODO: pensar que A y B ponemos aca
-                    nd[i][Y] += nearestZombieDirY * CHASE_FORCE * Math.exp(- nearestZombieDistance / 1); //Puse A=8 y B=1 por ahora
+                    nd[i][X] += nearestZombieDirX * A_Z * Math.exp(- nearestZombieDistance / B_Z);
+                    nd[i][Y] += nearestZombieDirY * A_Z * Math.exp(- nearestZombieDistance / B_Z);
 
                     //Interacción con la pared
                     double x = d.getX();
@@ -169,8 +170,8 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nd[i][X] -= ex * A_Z * Math.exp(-distToWall / B_H);
-                    nd[i][Y] -= ey * A_Z * Math.exp(-distToWall / B_H);
+                    nd[i][X] -= ex * A_W * Math.exp(-distToWall / B_W);
+                    nd[i][Y] -= ey * A_W * Math.exp(-distToWall / B_W);
 
                 }
 
@@ -194,8 +195,8 @@ public class Field implements Iterable<Time> {
                     double ex = distXToWall / distToWall;
                     double ey = distYToWall / distToWall;
 
-                    nz[i][X] -= ex * A_Z * Math.exp(-distToWall);
-                    nz[i][Y] -= ey * A_Z * Math.exp(-distToWall);
+                    nz[i][X] -= ex * A_W * Math.exp(-distToWall/ B_W);
+                    nz[i][Y] -= ey * A_W * Math.exp(-distToWall/ B_W);
                     for(int j = i + 1; j < zombies.size(); j++){
                         Zombie z2 = zombies.get(j);
                         double[] n = getInteraction(z2, z, A_H, B_H);
