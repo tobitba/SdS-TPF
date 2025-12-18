@@ -55,32 +55,47 @@ public class Field implements Iterable<Time> {
                 double[][] nd = new double[doctors.size()][2];
                 double[][] nz = new double[zombies.size()][2];
 
+                // CIVILES
                 for (int i = 0; i < civilians.size(); i++) {
                     Civilian c1 = civilians.get(i);
-                    if (c1.isFighting())
-                        continue;
                     //Interaccion con otros civiles
                     for (int j = i + 1; j < civilians.size(); j++) {
                         Civilian c2 = civilians.get(j);
-                        if (c2.isFighting()) { //If another civi is transforming, treat him like a zombie
+                        if (c1.isFighting()) {
+                            double[] n = getInteraction(c2, c1, A_Z, B_Z);
+                            nc[j][X] += n[X];
+                            nc[j][Y] += n[Y];
+                            continue;
+                        }
+                        if (c2.isFighting()) {
                             double[] n = getInteraction(c2, c1, A_Z, B_Z);
                             nc[i][X] -= n[X];
                             nc[i][Y] -= n[Y];
-                        } else {
-                            double[] n = getInteraction(c2, c1, A_H, B_H);
-
-                            nc[i][X] -= n[X];
-                            nc[i][Y] -= n[Y];
-                            nc[j][X] += n[X];
-                            nc[j][Y] += n[Y];
+                            continue;
                         }
+                        double[] n = getInteraction(c2, c1, A_H, B_H);
+
+                        nc[i][X] -= n[X];
+                        nc[i][Y] -= n[Y];
+                        nc[j][X] += n[X];
+                        nc[j][Y] += n[Y];
 
                     }
                     //Interaccion con doctores (misma logica anterior, tengo que evitarlos)
                     for (int j = 0; j < doctors.size(); j++) {
                         Doctor d = doctors.get(j);
-                        if (d.isFighting())
-                            continue;  //TODO: aca no deberia ser igual que en el caso civil vs civil transformando??
+                        if (c1.isFighting()) {
+                            double[] n = getInteraction(d, c1, A_Z, B_Z);
+                            nd[j][X] += n[X];
+                            nd[j][Y] += n[Y];
+                            continue;
+                        }
+                        if (d.isFighting()) {
+                            double[] n = getInteraction(d, c1, A_Z, B_Z);
+                            nc[i][X] -= n[X];
+                            nc[i][Y] -= n[Y];
+                            continue;
+                        }
                         double[] n = getInteraction(d, c1, A_H, B_H);
 
                         nc[i][X] -= n[X];
@@ -90,7 +105,20 @@ public class Field implements Iterable<Time> {
 
                     }
                     //Interaccion con zombies
-                    for (Zombie z : zombies) {
+                    for (int j = 0; j < zombies.size(); j++) {
+                        Zombie z = zombies.get(j);
+                        if (c1.isFighting()) {
+                            double[] n = getInteraction(z, c1, A_Z, B_Z);
+                            nz[j][X] += n[X];
+                            nz[j][Y] += n[Y];
+                            continue;
+                        }
+                        if (z.isFighting()) {
+                            double[] n = getInteraction(z, c1, A_Z, B_Z);
+                            nc[i][X] -= n[X];
+                            nc[i][Y] -= n[Y];
+                            continue;
+                        }
                         double[] n = getInteraction(z, c1, A_Z, B_Z);
                         nc[i][X] -= n[X];
                         nc[i][Y] -= n[Y];
@@ -119,14 +147,23 @@ public class Field implements Iterable<Time> {
 
                 }
 
+                // DOCTORES
                 for (int i = 0; i < doctors.size(); i++) {
                     Doctor d = doctors.get(i);
-                    if (d.isFighting())
-                        continue; //TODO: aca no deberia ser igual que en el caso civil vs civil transformando??
                     for (int j = i + 1; j < doctors.size(); j++) {
                         Doctor d2 = doctors.get(j);
-                        if (d2.isFighting())
+                        if (d.isFighting()) {
+                            double[] n = getInteraction(d2, d, A_Z, B_Z);
+                            nd[j][X] += n[X];
+                            nd[j][Y] += n[Y];
                             continue;
+                        }
+                        if (d2.isFighting()) {
+                            double[] n = getInteraction(d2, d, A_Z, B_Z);
+                            nd[i][X] -= n[X];
+                            nd[i][Y] -= n[Y];
+                            continue;
+                        }
                         double[] n = getInteraction(d2, d, A_H, B_H);
 
                         nd[i][X] -= n[X];
@@ -139,7 +176,16 @@ public class Field implements Iterable<Time> {
                     double nearestZombieDirY = 0;
                     for (int j = 0; j < zombies.size(); j++) {
                         Zombie z = zombies.get(j);
-                        if (z.isFighting())
+                        if (d.isFighting()) {
+                            double[] n = getInteraction(z, d, A_Z, B_Z);
+                            nz[j][X] += n[X];
+                            nz[j][Y] += n[Y];
+                            continue;
+                        }
+                        if (z.isFighting()) {
+                            double[] n = getInteraction(z, d, A_Z, B_Z);
+                            nd[i][X] -= n[X];
+                            nd[i][Y] -= n[Y];
                             continue;
                         double[] interaction = getInteraction(z, d, A_Z, B_Z);
                         double distance = interaction[2];
@@ -175,30 +221,43 @@ public class Field implements Iterable<Time> {
 
                 }
 
+                // ZOMBIES
                 for (int i = 0; i < zombies.size(); i++) {
                     Zombie z = zombies.get(i);
-                    if (z.isFighting())
-                        continue;
-                    nz[i][X] += z.getTargetDirection()[X] * A_Z;
-                    nz[i][Y] += z.getTargetDirection()[Y] * A_Z;
-                    //Interacción con la pared
-                    double x = z.getX();
-                    double y = z.getY();
-                    double r = Math.sqrt(x * x + y * y);
-                    if (r < 1e-9)
-                        continue;
-                    double distToWall = borderRadius - r;
+                    if (! z.isFighting()) {
 
-                    double distXToWall = distToWall * (x / r); // dist * cos theta
-                    double distYToWall = distToWall * (y / r); // dist * sin theta
+                        nz[i][X] += z.getTargetDirection()[X] * A_Z;
+                        nz[i][Y] += z.getTargetDirection()[Y] * A_Z;
+                        //Interacción con la pared
+                        double x = z.getX();
+                        double y = z.getY();
+                        double r = Math.sqrt(x * x + y * y);
+                        if (r < 1e-9)
+                            continue;
+                        double distToWall = borderRadius - r;
 
-                    double ex = distXToWall / distToWall;
-                    double ey = distYToWall / distToWall;
+                        double distXToWall = distToWall * (x / r); // dist * cos theta
+                        double distYToWall = distToWall * (y / r); // dist * sin theta
+
+                        double ex = distXToWall / distToWall;
+                        double ey = distYToWall / distToWall;
 
                     nz[i][X] -= ex * A_W * Math.exp(-distToWall/ B_W);
                     nz[i][Y] -= ey * A_W * Math.exp(-distToWall/ B_W);
                     for(int j = i + 1; j < zombies.size(); j++){
                         Zombie z2 = zombies.get(j);
+                        if (z.isFighting()) {
+                            double[] n = getInteraction(z2, z, A_Z, B_Z);
+                            nz[j][X] += n[X];
+                            nz[j][Y] += n[Y];
+                            continue;
+                        }
+                        if (z2.isFighting()) {
+                            double[] n = getInteraction(z2, z, A_Z, B_Z);
+                            nz[i][X] -= n[X];
+                            nz[i][Y] -= n[Y];
+                            continue;
+                        }
                         double[] n = getInteraction(z2, z, A_H, B_H);
 
                         nz[i][X] -= n[X];
