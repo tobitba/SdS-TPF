@@ -44,7 +44,7 @@ public class Field implements Iterable<Time> {
 
             @Override
             public boolean hasNext() {
-                return currentTime < maxTime + DT;
+                return currentTime < maxTime + DT && !zombies.isEmpty() && !civilians.isEmpty();
             }
 
             @Override
@@ -64,14 +64,14 @@ public class Field implements Iterable<Time> {
                             double[] n = getInteraction(c2, c1, A_Z, B_Z);
                             nc[i][X] -= n[X];
                             nc[i][Y] -= n[Y];
+                        } else {
+                            double[] n = getInteraction(c2, c1, A_H, B_H);
+
+                            nc[i][X] -= n[X];
+                            nc[i][Y] -= n[Y];
+                            nc[j][X] += n[X];
+                            nc[j][Y] += n[Y];
                         }
-                        double[] n = getInteraction(c2, c1, A_H, B_H);
-
-                        nc[i][X] -= n[X];
-                        nc[i][Y] -= n[Y];
-                        nc[j][X] += n[X];
-                        nc[j][Y] += n[Y];
-
 
                     }
                     //Interaccion con doctores (misma logica anterior, tengo que evitarlos)

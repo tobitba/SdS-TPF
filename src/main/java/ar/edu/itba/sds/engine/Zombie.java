@@ -21,6 +21,9 @@ public class Zombie extends Agent {
     }
 
     public double[] getTargetDirection(){
+        if(targetDirection == null){
+            return new double[]{0, 0};
+        }
         return targetDirection;
     }
 
