@@ -15,7 +15,7 @@ public class AgentGenerator {
     public static void generateAgents(int civilianCount, int doctorCount, Consumer<Civilian> civilianConsumer,
                                       Consumer<Doctor> doctorConsumer, Consumer<Zombie> zombieConsumer, double fieldRadius){
         double initialHumanRadius = Agent.getRmin();
-        GeneratedGrid grid = new GeneratedGrid(fieldRadius);
+        GeneratedGrid grid = new GeneratedGrid();
         generateHuman(civilianCount,civilianConsumer,initialHumanRadius, fieldRadius, grid, (x,y) -> new Civilian(x,y,0,0));
         generateHuman(doctorCount,doctorConsumer,initialHumanRadius, fieldRadius, grid, (x,y) -> new Doctor(x,y,0,0));
         zombieConsumer.accept(new Zombie(0,0,0,0,false));
@@ -45,7 +45,7 @@ public class AgentGenerator {
                 int cj = (int) Math.floor(y / cellSize);
                 cell = new Cell(ci,cj);
                 intentos++;
-            } while(grid.checkCollision(x,y,cell) && intentos < MAX_INTENTOS);
+            } while(grid.checkCollision(x,y,initialRadius,cell) && intentos < MAX_INTENTOS);
 
             if(intentos == MAX_INTENTOS){
                 throw new RuntimeException("Could not fit humans on field. Try lowering human count");
@@ -58,7 +58,6 @@ public class AgentGenerator {
     }
 
     private static class GeneratedGrid {
-        private final double cellSize;
         private final Map<Cell, List<Agent>> grid;
         private final static int[][] directions = {
                 {1, 0},   // derecha
@@ -73,8 +72,7 @@ public class AgentGenerator {
         };
 
 
-        public GeneratedGrid(double particleRadius) {
-            this.cellSize = 2 * particleRadius;
+        public GeneratedGrid() {
             this.grid = new HashMap<>();
         }
 
@@ -82,8 +80,8 @@ public class AgentGenerator {
             grid.computeIfAbsent(cell, k -> new ArrayList<>()).add(agent);
         }
 
-        public boolean checkCollision(double x, double y, Cell cell) {
-            //TODO: hacer check con radios, no solo con el centro
+        public boolean checkCollision(double x, double y, double radius, Cell cell) {
+            // Check with radii, not just with center
             for(int[] direction : directions){
                 Cell neighborCell = new Cell(cell.i + direction[0], cell.j + direction[1]);
                 List<Agent> agents = grid.get(neighborCell);
@@ -92,8 +90,9 @@ public class AgentGenerator {
                         double dx = x - other.getX();
                         double dy = y - other.getY();
                         double dist2 = dx * dx + dy * dy;
-                        double minDist = cellSize * cellSize;
-                        if (dist2 < minDist) { // d2<(2⋅r)2
+                        double radiusSum = radius + other.getR();
+                        double minDist = radiusSum * radiusSum;
+                        if (dist2 < minDist) {
                             return true; // se solapa
                         }
                     }
