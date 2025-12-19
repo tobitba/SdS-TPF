@@ -9,16 +9,22 @@ import java.io.IOException;
 
 public class PostProcessor implements Closeable {
     private static final String OUTPUT_FILE_NAME = "dynamicOutput.txt";
+    private static final String MEANV_FILE_NAME = "meanv.txt";
+
     private static final String CIVILIANS = "CIVILIANS\n";
     private static final String DOCTORS = "DOCTORS\n";
     private static final String ZOMBIES = "ZOMBIES\n";
+
     private final BufferedWriter writer;
+    private final BufferedWriter meanWriter;
 
     public PostProcessor(String outputName) {
         try {
             if (outputName == null)
                 outputName = OUTPUT_FILE_NAME;
+
             writer = new BufferedWriter(new FileWriter(outputName));
+            meanWriter = new BufferedWriter(new FileWriter(MEANV_FILE_NAME));
         } catch (IOException e) {
             throw new RuntimeException("Error opening file");
         }
@@ -26,6 +32,7 @@ public class PostProcessor implements Closeable {
 
     public void processEpoch(Time time) {
         try {
+            // Main output
             writer.write(String.valueOf(time.time()));
             writer.newLine();
             writer.write(CIVILIANS);
@@ -35,6 +42,11 @@ public class PostProcessor implements Closeable {
             writer.write(ZOMBIES);
             time.zombies().forEach(this::processParticle);
             writer.newLine();
+
+            // Mean velocity output (placeholder)
+            double meanV = time.getMeanV();
+            meanWriter.write(time.time() + " " + meanV);
+            meanWriter.newLine();
 
         } catch (IOException e) {
             throw new RuntimeException("Error writing on output file");
@@ -53,5 +65,6 @@ public class PostProcessor implements Closeable {
     @Override
     public void close() throws IOException {
         writer.close();
+        meanWriter.close();
     }
 }
