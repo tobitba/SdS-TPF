@@ -46,7 +46,9 @@ public class Field implements Iterable<Time> {
 
             @Override
             public boolean hasNext() {
-                return currentTime < maxTime + DT && !zombies.isEmpty() && (!civilians.isEmpty() || !doctors.isEmpty());
+                return currentTime + DT < maxTime
+                        // && !zombies.isEmpty() && (!civilians.isEmpty() || !doctors.isEmpty())
+                        ;
             }
 
             @Override
