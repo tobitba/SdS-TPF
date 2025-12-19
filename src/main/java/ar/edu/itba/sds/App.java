@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class App {
-    private static final String CIVILIAN_COUNT = "hc";
-    private static final String DOCTOR_COUNT = "hd";
+    private static final String CIVILIAN_COUNT = "nc";
+    private static final String DOCTOR_COUNT = "nd";
     private static final String MAX_TIME = "duration";
     private static final String OUTPUT = "output";
 
