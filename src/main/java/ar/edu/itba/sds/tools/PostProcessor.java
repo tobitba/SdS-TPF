@@ -24,7 +24,15 @@ public class PostProcessor implements Closeable {
                 outputName = OUTPUT_FILE_NAME;
 
             writer = new BufferedWriter(new FileWriter(outputName));
-            meanWriter = new BufferedWriter(new FileWriter(MEANV_FILE_NAME));
+            String meanvName = outputName.replace(".txt", "_mean.txt");
+
+
+            if (meanvName.equals(outputName)) {
+                meanvName = outputName + "_mean.txt";
+            }
+
+            meanWriter = new BufferedWriter(new FileWriter(meanvName));
+
         } catch (IOException e) {
             throw new RuntimeException("Error opening file");
         }
