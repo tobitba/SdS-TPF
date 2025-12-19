@@ -8,9 +8,16 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class App {
-    public static void main(String[] args)  {
+    private static final String CIVILIAN_COUNT = "hc";
+    private static final String DOCTOR_COUNT = "hd";
+    private static final String MAX_TIME = "duration";
 
-        Field field = new Field(11,50,1, 2000);
+    public static void main(String[] args)  {
+        int civilianCount = Integer.parseInt(System.getProperty(CIVILIAN_COUNT));
+        int doctorCount = Integer.parseInt(System.getProperty(DOCTOR_COUNT));
+        double maxTime = Double.parseDouble(System.getProperty(MAX_TIME));
+
+        Field field = new Field(11, civilianCount, doctorCount, maxTime);
         Iterator<Time> timeIterator = field.iterator();
         try(PostProcessor postProcessor = new PostProcessor("dynamicOutput.txt")) {
             postProcessor.processEpoch(field.getCurrentTime()); //t = 0
